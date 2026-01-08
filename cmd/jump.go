@@ -37,5 +37,6 @@ var jumpRun = func(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fmt.Printf("First match: %s", found[0])
+	repo := found[0]
+	fmt.Printf("%s\n", repo.Path)
 }

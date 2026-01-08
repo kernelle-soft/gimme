@@ -36,7 +36,7 @@ var listReposRun = func(cmd *cobra.Command, args []string) {
 		})
 
 		for _, repo := range repos {
-			fmt.Printf("- %s (%s)\n", repo.Name, repo.Path, repo.CurrentBranch())
+			fmt.Printf("- %s (%s)\n", repo.Name, repo.CurrentBranch())
 		}
 	}
 }
