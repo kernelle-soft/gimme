@@ -5,6 +5,7 @@ import (
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/spf13/cobra"
 
+	configcmd "github.com/kernelle-soft/gimme/cmd/config"
 	"github.com/kernelle-soft/gimme/internal/config"
 )
 
@@ -27,6 +28,7 @@ var root = &cobra.Command{
 func init() {
 	root.AddCommand(jumpToRepoCommand)
 	root.AddCommand(listCommand)
+	root.AddCommand(configcmd.Command)
 }
 
 func Execute() {
