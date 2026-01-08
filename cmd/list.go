@@ -28,14 +28,14 @@ var listReposRun = func(cmd *cobra.Command, args []string) {
 	}
 
 	for _, folder := range config.GetSearchFolders() {
-		log.Info("%s", folder)
+		log.Print("{}/", folder)
 		repos := search.Repositories(search.RepoSearchOptions{
 			Query:         query,
 			SearchFolders: []string{folder},
 		})
 
 		for _, repo := range repos {
-			log.Info("- %s (%s)", repo.Name, repo.CurrentBranch())
+			log.Print("- {} ({})", repo.Name, repo.CurrentBranch())
 		}
 	}
 }

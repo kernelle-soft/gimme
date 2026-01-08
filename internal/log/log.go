@@ -32,7 +32,11 @@ func (l *logger) Warning(msg any, args ...any) {
 }
 
 func (l *logger) Info(msg any, args ...any) {
-	l.stdout.Info(msg, args...)
+	l.stderr.Info(msg, args...)
+}
+
+func (l *logger) Print(msg any, args ...any) {
+	l.stderr.Print(msg, args...)
 }
 
 func (l *logger) Debug(msg any, args ...any) {
@@ -87,6 +91,15 @@ func Info(msg any, args ...any) {
 		_log.stderr.Info(format(msgStr, args...))
 	} else {
 		_log.stderr.Info(msg, args...)
+	}
+}
+
+func Print(msg any, args ...any) {
+	msgStr := fmt.Sprint(msg)
+	if hasPlaceholders(msgStr) {
+		_log.stderr.Print(format(msgStr, args...))
+	} else {
+		_log.stderr.Print(msg, args...)
 	}
 }
 

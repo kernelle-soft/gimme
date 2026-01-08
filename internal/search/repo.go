@@ -73,7 +73,7 @@ func findReposRecursively(folder string, query string) []Repo {
 
 	entries, err := os.ReadDir(folder)
 	if err != nil {
-		log.Error("Error reading directory", "path", folder, "err", err)
+		log.Error("Error reading directory", "path", folder, "error", err)
 		return results
 	}
 
