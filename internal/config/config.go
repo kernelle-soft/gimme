@@ -30,7 +30,7 @@ func GetSearchFolders() []string {
 	return slice.Map(rawPaths, func(rawPath string) string {
 		normalized, err := path.Normalize(rawPath)
 		if err != nil {
-			log.Error("Error parsing search folder", "path", rawPath, "error", err)
+			log.Error("Error parsing search folder \"{}\". Error: {}", rawPath, err)
 		}
 		return normalized
 	})
