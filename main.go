@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/kernelle-soft/gimmetool/cmd"
+	"github.com/kernelle-soft/gimme/cmd"
 )
 
 func main() {

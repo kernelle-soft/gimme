@@ -1,4 +1,4 @@
-module github.com/kernelle-soft/gimmetool
+module github.com/kernelle-soft/gimme
 
 go 1.25.5
 

@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kernelle-soft/gimmetool/internal/config"
-	"github.com/kernelle-soft/gimmetool/internal/search"
+	"github.com/kernelle-soft/gimme/internal/config"
+	"github.com/kernelle-soft/gimme/internal/search"
 	"github.com/spf13/cobra"
 )
 

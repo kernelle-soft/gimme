@@ -5,7 +5,7 @@ import (
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/spf13/cobra"
 
-	"github.com/kernelle-soft/gimmetool/internal/config"
+	"github.com/kernelle-soft/gimme/internal/config"
 )
 
 type Description struct {

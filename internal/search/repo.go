@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kernelle-soft/gimmetool/internal/config"
+	"github.com/kernelle-soft/gimme/internal/config"
 
 	"github.com/go-git/go-git/v5"
 )
@@ -23,12 +23,12 @@ func (r *Repo) CurrentBranch() string {
 		fmt.Fprintf(os.Stderr, "Error getting current branch for %s: %w", r.Path, err)
 		return ""
 	}
-	
+
 	// Head could be detached (pointing to a commit, not a branch)
 	if !head.Name().IsBranch() {
 		return head.Hash().String()[:7]
 	}
-	
+
 	return head.Name().Short()
 }
 
@@ -93,8 +93,8 @@ func findReposRecursively(folder string, query string) []Repo {
 		if strings.Contains(entry.Name(), query) {
 			results = append(results, Repo{
 				Repository: repo,
-				Path: path,
-				Name: entry.Name(),
+				Path:       path,
+				Name:       entry.Name(),
 			})
 		}
 	}

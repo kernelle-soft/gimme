@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kernelle-soft/gimmetool/internal/path"
-	"github.com/kernelle-soft/gimmetool/internal/slice"
+	"github.com/kernelle-soft/gimme/internal/path"
+	"github.com/kernelle-soft/gimme/internal/slice"
 	"github.com/spf13/viper"
 )
 
@@ -29,7 +29,7 @@ func Load() {
 func GetSearchFolders() []string {
 	rawPaths := viper.GetStringSlice("search-folders")
 
-	return slice.Map(rawPaths, func (rawPath string) string {
+	return slice.Map(rawPaths, func(rawPath string) string {
 		normalized, err := path.Normalize(rawPath)
 		if err != nil {
 			_ = fmt.Errorf("Error parsing search folder %s: %w", rawPath, err)
