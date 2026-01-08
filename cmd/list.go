@@ -22,7 +22,7 @@ var listCommand = &cobra.Command{
 
 var listReposRun = func(cmd *cobra.Command, args []string) {
 
-	var query string		
+	var query string
 	if len(args) > 0 {
 		query = args[0]
 	}

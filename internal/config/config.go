@@ -19,7 +19,7 @@ func Load() {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			log.Error("Error reading gimme configuration:", err)	
+			log.Error("Error reading gimme configuration", "err", err)
 		}
 	}
 }
@@ -30,7 +30,7 @@ func GetSearchFolders() []string {
 	return slice.Map(rawPaths, func(rawPath string) string {
 		normalized, err := path.Normalize(rawPath)
 		if err != nil {
-			log.Error("Error parsing search folder %s: %w", rawPath, err)
+			log.Error("Error parsing search folder", "path", rawPath, "error", err)
 		}
 		return normalized
 	})

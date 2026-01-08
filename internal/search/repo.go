@@ -20,7 +20,7 @@ type Repo struct {
 func (r *Repo) CurrentBranch() string {
 	head, err := r.Repository.Head()
 	if err != nil {
-		log.Error("Error getting current branch for %s: %w", r.Path, err)
+		log.Error("Error getting current branch", "path", r.Path, "err", err)
 		return ""
 	}
 
@@ -73,7 +73,7 @@ func findReposRecursively(folder string, query string) []Repo {
 
 	entries, err := os.ReadDir(folder)
 	if err != nil {
-		log.Error("reading %s: %w", folder, err)
+		log.Error("Error reading directory", "path", folder, "err", err)
 		return results
 	}
 

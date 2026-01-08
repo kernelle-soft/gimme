@@ -31,7 +31,7 @@ var jumpRun = func(cmd *cobra.Command, args []string) {
 	query := args[0]
 	found := search.Repositories(search.ForRepo(query))
 	if len(found) == 0 {
-		log.Error("No repositories or aliases found beginning with '%s'", query)
+		log.Info("No repositories or aliases found", "query", query)
 		return
 	}
 
