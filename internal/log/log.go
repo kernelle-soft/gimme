@@ -6,9 +6,12 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/log"
 )
+
+var placeholderPattern = regexp.MustCompile(`\{\w*\}`)
 
 type logger struct {
 	stdout *log.Logger
@@ -58,18 +61,63 @@ func newLogger() *logger {
 var _log = newLogger()
 
 // Package-level functions
-func ToStdout(path string)         { _log.ToStdout(path) }
-func Error(msg any, args ...any)   { _log.Error(msg, args...) }
-func Warning(msg any, args ...any) { _log.Warning(msg, args...) }
-func Info(msg any, args ...any)    { _log.Info(msg, args...) }
-func Debug(msg any, args ...any)   { _log.Debug(msg, args...) }
-func Fatal(msg any, args ...any)   { _log.Fatal(msg, args...) }
+func ToStdout(path string) { _log.ToStdout(path) }
 
-// Fmt formats a template string with flexible placeholder syntax:
+func Error(msg any, args ...any) {
+	msgStr := fmt.Sprint(msg)
+	if hasPlaceholders(msgStr) {
+		_log.stderr.Error(format(msgStr, args...))
+	} else {
+		_log.stderr.Error(msg, args...)
+	}
+}
+
+func Warning(msg any, args ...any) {
+	msgStr := fmt.Sprint(msg)
+	if hasPlaceholders(msgStr) {
+		_log.stderr.Warn(format(msgStr, args...))
+	} else {
+		_log.stderr.Warn(msg, args...)
+	}
+}
+
+func Info(msg any, args ...any) {
+	msgStr := fmt.Sprint(msg)
+	if hasPlaceholders(msgStr) {
+		_log.stderr.Info(format(msgStr, args...))
+	} else {
+		_log.stderr.Info(msg, args...)
+	}
+}
+
+func Debug(msg any, args ...any) {
+	msgStr := fmt.Sprint(msg)
+	if hasPlaceholders(msgStr) {
+		_log.debug.Debug(format(msgStr, args...))
+	} else {
+		_log.debug.Debug(msg, args...)
+	}
+}
+
+func Fatal(msg any, args ...any) {
+	msgStr := fmt.Sprint(msg)
+	if hasPlaceholders(msgStr) {
+		_log.debug.Fatal(format(msgStr, args...))
+	} else {
+		_log.debug.Fatal(msg, args...)
+	}
+}
+
+// hasPlaceholders checks if a string contains template placeholders
+func hasPlaceholders(s string) bool {
+	return strings.Contains(s, "{}") || placeholderPattern.MatchString(s)
+}
+
+// format applies template formatting to a string:
 //   - {}         → next positional argument
 //   - {0}, {1}   → indexed argument
 //   - {Name}     → struct field value
-func Fmt(template string, args ...any) string {
+func format(template string, args ...any) string {
 	re := regexp.MustCompile(`\{(\w*)\}`)
 	posIndex := 0
 
