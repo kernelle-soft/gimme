@@ -8,6 +8,7 @@ function gimme() {
     if [[ "$output" == cd://* ]]; then
         cd "${output#cd://}" || return 1
     else
+        [[ -n "$output" ]] && echo "$output"
         return $exit_code
     fi
 }
