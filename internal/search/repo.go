@@ -1,12 +1,12 @@
 package search
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/kernelle-soft/gimme/internal/config"
+	"github.com/kernelle-soft/gimme/internal/log"
 
 	"github.com/go-git/go-git/v5"
 )
@@ -20,7 +20,7 @@ type Repo struct {
 func (r *Repo) CurrentBranch() string {
 	head, err := r.Repository.Head()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error getting current branch for %s: %w", r.Path, err)
+		log.Error("Error getting current branch for %s: %w", r.Path, err)
 		return ""
 	}
 
@@ -73,7 +73,7 @@ func findReposRecursively(folder string, query string) []Repo {
 
 	entries, err := os.ReadDir(folder)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "reading %s: %w", folder, err)
+		log.Error("reading %s: %w", folder, err)
 		return results
 	}
 

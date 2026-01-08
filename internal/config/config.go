@@ -1,9 +1,7 @@
 package config
 
 import (
-	"fmt"
-	"os"
-
+	"github.com/kernelle-soft/gimme/internal/log"
 	"github.com/kernelle-soft/gimme/internal/path"
 	"github.com/kernelle-soft/gimme/internal/slice"
 	"github.com/spf13/viper"
@@ -21,7 +19,7 @@ func Load() {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			fmt.Fprintln(os.Stderr, "Error reading gimme configuration:", err)
+			log.Error("Error reading gimme configuration:", err)	
 		}
 	}
 }
@@ -32,7 +30,7 @@ func GetSearchFolders() []string {
 	return slice.Map(rawPaths, func(rawPath string) string {
 		normalized, err := path.Normalize(rawPath)
 		if err != nil {
-			_ = fmt.Errorf("Error parsing search folder %s: %w", rawPath, err)
+			log.Error("Error parsing search folder %s: %w", rawPath, err)
 		}
 		return normalized
 	})

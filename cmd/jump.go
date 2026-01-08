@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
+	"github.com/kernelle-soft/gimme/internal/log"
 	"github.com/kernelle-soft/gimme/internal/search"
 	"github.com/spf13/cobra"
 )
@@ -33,10 +31,10 @@ var jumpRun = func(cmd *cobra.Command, args []string) {
 	query := args[0]
 	found := search.Repositories(search.ForRepo(query))
 	if len(found) == 0 {
-		fmt.Fprintf(os.Stderr, "No repositories or aliases found beginning with '%s'", query)
+		log.Error("No repositories or aliases found beginning with '%s'", query)
 		return
 	}
 
-	repo := found[0]
-	fmt.Printf("%s\n", repo.Path)
+	// Found match.
+	log.ToStdout(found[0].Path)
 }

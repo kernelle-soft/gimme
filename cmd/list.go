@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/kernelle-soft/gimme/internal/config"
+	"github.com/kernelle-soft/gimme/internal/log"
 	"github.com/kernelle-soft/gimme/internal/search"
 	"github.com/spf13/cobra"
 )
@@ -23,20 +22,20 @@ var listCommand = &cobra.Command{
 
 var listReposRun = func(cmd *cobra.Command, args []string) {
 
-	var query string
+	var query string		
 	if len(args) > 0 {
 		query = args[0]
 	}
 
 	for _, folder := range config.GetSearchFolders() {
-		fmt.Printf("%s\n", folder)
+		log.Info("%s", folder)
 		repos := search.Repositories(search.RepoSearchOptions{
 			Query:         query,
 			SearchFolders: []string{folder},
 		})
 
 		for _, repo := range repos {
-			fmt.Printf("- %s (%s)\n", repo.Name, repo.CurrentBranch())
+			log.Info("- %s (%s)", repo.Name, repo.CurrentBranch())
 		}
 	}
 }
