@@ -3,6 +3,7 @@ package search
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/kernelle-soft/gimme/internal/config"
@@ -15,6 +16,8 @@ type Repo struct {
 	Repository *git.Repository
 	Path       string
 	Name       string
+	Pinned     bool
+	PinIndex   int // -1 if not pinned, otherwise the index in the pins list (lower = higher priority)
 }
 
 func (r *Repo) CurrentBranch() string {
@@ -60,15 +63,40 @@ func InFolders(searchFolders []string) RepoSearchOptions {
 
 func Repositories(opts RepoSearchOptions) []Repo {
 	found := []Repo{}
+	pins := config.GetPins()
 
 	for _, folder := range opts.SearchFolders {
-		found = append(found, findReposRecursively(folder, opts.Query)...)
+		found = append(found, findReposRecursively(folder, opts.Query, pins)...)
 	}
+
+	// Sort alphabetically by name
+	slices.SortFunc(found, func(a, b Repo) int {
+		return strings.Compare(a.Name, b.Name)
+	})
 
 	return found
 }
 
-func findReposRecursively(folder string, query string) []Repo {
+// SortByPins sorts repos with pinned repos first (by pin order), then alphabetically.
+// This is useful for commands like jump that want to prioritize pinned repos.
+func SortByPins(repos []Repo) {
+	slices.SortFunc(repos, func(a, b Repo) int {
+		if a.Pinned && !b.Pinned {
+			return -1
+		}
+		if !a.Pinned && b.Pinned {
+			return 1
+		}
+		// Both pinned: sort by pin index (lower index = higher priority)
+		if a.Pinned && b.Pinned {
+			return a.PinIndex - b.PinIndex
+		}
+		// Neither pinned: sort alphabetically
+		return strings.Compare(a.Name, b.Name)
+	})
+}
+
+func findReposRecursively(folder string, query string, pins []string) []Repo {
 	results := []Repo{}
 
 	entries, err := os.ReadDir(folder)
@@ -86,15 +114,18 @@ func findReposRecursively(folder string, query string) []Repo {
 
 		repo, err := git.PlainOpen(path)
 		if err != nil {
-			results = append(results, findReposRecursively(path, query)...)
+			results = append(results, findReposRecursively(path, query, pins)...)
 			continue
 		}
 
 		if strings.Contains(entry.Name(), query) {
+			pinIndex := slices.Index(pins, path)
 			results = append(results, Repo{
 				Repository: repo,
 				Path:       path,
 				Name:       entry.Name(),
+				Pinned:     pinIndex >= 0,
+				PinIndex:   pinIndex,
 			})
 		}
 	}

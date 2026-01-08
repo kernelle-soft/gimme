@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/kernelle-soft/gimme/internal/config"
 	"github.com/kernelle-soft/gimme/internal/log"
+	"github.com/kernelle-soft/gimme/internal/path"
 	"github.com/kernelle-soft/gimme/internal/search"
 	"github.com/spf13/cobra"
 )
@@ -29,11 +33,29 @@ var jumpRun = func(cmd *cobra.Command, args []string) {
 	}
 
 	query := args[0]
-	found := search.Repositories(search.ForRepo(query))
-	if len(found) == 0 {
-		log.Print("No repositories or aliases found for \"{}\".", query)
+
+	// Expand alias if one exists
+	aliases := config.GetAliases()
+	if expanded, ok := aliases[query]; ok {
+		query = expanded
+	}
+
+	// Check if query is a direct path (alias may have expanded to a path)
+	normalizedQuery, _ := path.Normalize(query)
+	if info, err := os.Stat(normalizedQuery); err == nil && info.IsDir() {
+		log.ToStdout(normalizedQuery)
 		return
 	}
+
+	// Search for repositories matching the query
+	found := search.Repositories(search.ForRepo(query))
+	if len(found) == 0 {
+		log.Print("No repositories found for \"{}\".", query)
+		return
+	}
+
+	// Sort by pins so pinned repos are prioritized
+	search.SortByPins(found)
 
 	// Found match.
 	log.ToStdout(found[0].Path)

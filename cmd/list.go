@@ -27,6 +27,28 @@ var listReposRun = func(cmd *cobra.Command, args []string) {
 		query = args[0]
 	}
 
+	// Get all repos to find pinned ones
+	allRepos := search.Repositories(search.ForRepo(query))
+
+	// Show pinned repos first as their own group
+	pinnedRepos := []search.Repo{}
+	for _, repo := range allRepos {
+		if repo.Pinned {
+			pinnedRepos = append(pinnedRepos, repo)
+		}
+	}
+
+	if len(pinnedRepos) > 0 {
+		// Sort pinned repos by pin index
+		search.SortByPins(pinnedRepos)
+		log.Print("pinned repositories:")
+		for _, repo := range pinnedRepos {
+			log.Print("- {} ({})", repo.Name, repo.CurrentBranch())
+		}
+		log.Print("") // Empty line for spacing
+	}
+
+	// Show repos by search folder
 	for _, folder := range config.GetSearchFolders() {
 		log.Print("{}/", folder)
 		repos := search.Repositories(search.RepoSearchOptions{
@@ -35,7 +57,11 @@ var listReposRun = func(cmd *cobra.Command, args []string) {
 		})
 
 		for _, repo := range repos {
-			log.Print("- {} ({})", repo.Name, repo.CurrentBranch())
+			if repo.Pinned {
+				log.Print("📌 {} ({})", repo.Name, repo.CurrentBranch())
+			} else {
+				log.Print("-  {} ({})", repo.Name, repo.CurrentBranch())
+			}
 		}
 	}
 }
