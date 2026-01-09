@@ -10,20 +10,41 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Config keys using nested structure:
+//
+//	search-folders: [...]
+//	pins:
+//	  repositories: [...]
+//	  branches:
+//	    global: [main, master]
+//	    repositories:
+//	      github.com/user/repo: [branch1, branch2]
+//	aliases: {...}
 const (
-	keySearchFolders      = "search-folders"
-	keyPinnedRepos        = "pinned-repos"
-	keyPinnedBranches     = "pinned-branches"
-	keyRepoPinnedBranches = "repo-pinned-branches"
-	keyAliases            = "aliases"
+	keySearchFolders = "search-folders"
+	keyAliases       = "aliases"
+
+	// Nested pins keys
+	keyPinsRepositories        = "pins.repositories"
+	keyPinsBranchesGlobal      = "pins.branches.global"
+	keyPinsBranchesRepositores = "pins.branches.repositories"
 )
+
+// Defaults
+var defaultSearchFolder = "~/"
+var defaultPinnedGlobalBranches = []string{"main", "master"}
+
+// isDefaultSearchFolder checks if the given groups match the default
+func isDefaultSearchFolder(groups []string) bool {
+	return groups[0] == defaultSearchFolder && len(groups) == 1
+}
 
 func Load() {
 	// Set defaults
-	viper.SetDefault(keySearchFolders, []string{"~/"})
-	viper.SetDefault(keyPinnedRepos, []string{})
-	viper.SetDefault(keyPinnedBranches, []string{"main", "master"})
-	viper.SetDefault(keyRepoPinnedBranches, map[string][]string{})
+	viper.SetDefault(keySearchFolders, []string{defaultSearchFolder})
+	viper.SetDefault(keyPinsRepositories, []string{})
+	viper.SetDefault(keyPinsBranchesGlobal, defaultPinnedGlobalBranches)
+	viper.SetDefault(keyPinsBranchesRepositores, map[string][]string{})
 	viper.SetDefault(keyAliases, map[string]string{})
 
 	// Config file location
@@ -66,12 +87,18 @@ func AddGroup(groupPath string) error {
 	for _, g := range groups {
 		existingNorm, _ := path.Normalize(g)
 		if existingNorm == normalized {
-			log.Error("Group already exists: \"{}\".", groupPath)
+			log.Print("Group already exists: \"{}\".", groupPath)
 			return nil
 		}
 	}
 
-	groups = append(groups, groupPath)
+	// If the only group is the default, replace it instead of appending
+	if isDefaultSearchFolder(groups) {
+		groups = []string{groupPath}
+	} else {
+		groups = append(groups, groupPath)
+	}
+
 	viper.Set(keySearchFolders, groups)
 	log.Print("Added search group \"{}\".", groupPath)
 	return saveConfig()
@@ -94,7 +121,7 @@ func DeleteGroup(groupPath string) error {
 	}
 
 	if !found {
-		log.Error("Group not found: \"{}\".", groupPath)
+		log.Print("Group not found: \"{}\".", groupPath)
 		return nil
 	}
 
@@ -113,7 +140,7 @@ func DeleteGroupByIndex(index int) error {
 	groups := viper.GetStringSlice(keySearchFolders)
 
 	if index < 0 || index >= len(groups) {
-		log.Error("Index out of range: {} (have {} groups).", index, len(groups))
+		log.Print("Index out of range: {} (have {} groups).", index, len(groups))
 		return nil
 	}
 
@@ -130,9 +157,13 @@ func DeleteGroupByIndex(index int) error {
 	return nil
 }
 
-// GetPinnedRepos returns the list of pinned repositories
+// =============================================================================
+// Pinned Repositories (pins.repositories)
+// =============================================================================
+
+// GetPinnedRepos returns the list of pinned repository paths
 func GetPinnedRepos() []string {
-	rawPaths := viper.GetStringSlice(keyPinnedRepos)
+	rawPaths := viper.GetStringSlice(keyPinsRepositories)
 
 	return slice.Map(rawPaths, func(rawPath string) string {
 		normalized, err := path.Normalize(rawPath)
@@ -146,7 +177,7 @@ func GetPinnedRepos() []string {
 
 // AddPinnedRepo adds a pinned repository path
 func AddPinnedRepo(repoPath string) error {
-	repos := viper.GetStringSlice(keyPinnedRepos)
+	repos := viper.GetStringSlice(keyPinsRepositories)
 
 	// Normalize the path
 	normalized, err := path.Normalize(repoPath)
@@ -159,13 +190,13 @@ func AddPinnedRepo(repoPath string) error {
 	for _, r := range repos {
 		existingNorm, _ := path.Normalize(r)
 		if existingNorm == normalized {
-			log.Error("Pinned repo already exists: \"{}\".", repoPath)
+			log.Print("Pinned repo already exists: \"{}\".", repoPath)
 			return nil
 		}
 	}
 
 	repos = append(repos, repoPath)
-	viper.Set(keyPinnedRepos, repos)
+	viper.Set(keyPinsRepositories, repos)
 	err = saveConfig()
 	if err != nil {
 		log.Error("Error saving config. Error: {}", err)
@@ -177,7 +208,7 @@ func AddPinnedRepo(repoPath string) error {
 
 // DeletePinnedRepo removes a pinned repository by path
 func DeletePinnedRepo(repoPath string) error {
-	repos := viper.GetStringSlice(keyPinnedRepos)
+	repos := viper.GetStringSlice(keyPinsRepositories)
 	normalized, _ := path.Normalize(repoPath)
 
 	newRepos := []string{}
@@ -192,11 +223,11 @@ func DeletePinnedRepo(repoPath string) error {
 	}
 
 	if !found {
-		log.Error("Pinned repo not found: \"{}\".", repoPath)
+		log.Print("Pinned repo not found: \"{}\".", repoPath)
 		return nil
 	}
 
-	viper.Set(keyPinnedRepos, newRepos)
+	viper.Set(keyPinsRepositories, newRepos)
 	err := saveConfig()
 	if err != nil {
 		log.Error("Error saving config. Error: {}", err)
@@ -208,16 +239,16 @@ func DeletePinnedRepo(repoPath string) error {
 
 // DeletePinnedRepoByIndex removes a pinned repository by index
 func DeletePinnedRepoByIndex(index int) error {
-	repos := viper.GetStringSlice(keyPinnedRepos)
+	repos := viper.GetStringSlice(keyPinsRepositories)
 
 	if index < 0 || index >= len(repos) {
-		log.Error("Index out of range: {} (have {} pinned repos).", index, len(repos))
+		log.Print("Index out of range: {} (have {} pinned repos).", index, len(repos))
 		return nil
 	}
 
 	repoPath := repos[index]
 	repos = append(repos[:index], repos[index+1:]...)
-	viper.Set(keyPinnedRepos, repos)
+	viper.Set(keyPinsRepositories, repos)
 	err := saveConfig()
 	if err != nil {
 		log.Error("Error saving config. Error: {}", err)
@@ -227,24 +258,36 @@ func DeletePinnedRepoByIndex(index int) error {
 	return nil
 }
 
-// GetPinnedBranches returns the list of globally pinned branches
-func GetPinnedBranches() []string {
-	return viper.GetStringSlice(keyPinnedBranches)
+// =============================================================================
+// Pinned Branches - Global (pins.branches.global)
+// =============================================================================
+
+// GetGlobalPinnedBranches returns the list of globally pinned branches
+func GetGlobalPinnedBranches() []string {
+	return viper.GetStringSlice(keyPinsBranchesGlobal)
 }
 
-// GetRepoPinnedBranches returns the map of repo path to pinned branches
+// IsBranchGloballyPinned checks if a branch is in the global pinned branches list
+func IsBranchGloballyPinned(branch string) bool {
+	for _, b := range GetGlobalPinnedBranches() {
+		if b == branch {
+			return true
+		}
+	}
+	return false
+}
+
+// =============================================================================
+// Pinned Branches - Per-Repo (pins.branches.repositories)
+// Uses repo identifier (e.g. "github.com/user/repo") as key
+// =============================================================================
+
+// GetRepoPinnedBranches returns the map of repo identifier to pinned branches
 func GetRepoPinnedBranches() map[string][]string {
 	result := make(map[string][]string)
-	raw := viper.GetStringMap(keyRepoPinnedBranches)
+	raw := viper.GetStringMap(keyPinsBranchesRepositores)
 
-	for repoPath, branches := range raw {
-		// Normalize the repo path
-		normalized, err := path.Normalize(repoPath)
-		if err != nil {
-			log.Error("Error parsing repo path \"{}\". Error: {}", repoPath, err)
-			normalized = repoPath
-		}
-
+	for repoID, branches := range raw {
 		// Convert branches to string slice
 		switch v := branches.(type) {
 		case []interface{}:
@@ -254,26 +297,24 @@ func GetRepoPinnedBranches() map[string][]string {
 					branchList = append(branchList, s)
 				}
 			}
-			result[normalized] = branchList
+			result[repoID] = branchList
 		case []string:
-			result[normalized] = v
+			result[repoID] = v
 		}
 	}
 
 	return result
 }
 
-// GetPinnedBranchesForRepo returns the pinned branches for a specific repo
-// This includes both globally pinned branches and repo-specific pinned branches
-func GetPinnedBranchesForRepo(repoPath string) []string {
-	normalized, _ := path.Normalize(repoPath)
-
+// GetPinnedBranchesForRepo returns all pinned branches for a specific repo
+// (both global and repo-specific)
+func GetPinnedBranchesForRepo(repoIdentifier string) []string {
 	// Start with global pinned branches
-	branches := GetPinnedBranches()
+	branches := GetGlobalPinnedBranches()
 
 	// Add repo-specific pinned branches
 	repoPins := GetRepoPinnedBranches()
-	if repoBranches, ok := repoPins[normalized]; ok {
+	if repoBranches, ok := repoPins[repoIdentifier]; ok {
 		branches = append(branches, repoBranches...)
 	}
 
@@ -281,47 +322,39 @@ func GetPinnedBranchesForRepo(repoPath string) []string {
 }
 
 // AddRepoPinnedBranch adds a pinned branch for a specific repository
-func AddRepoPinnedBranch(repoPath, branch string) error {
-	normalized, err := path.Normalize(repoPath)
-	if err != nil {
-		log.Error("Error parsing repo path \"{}\". Error: {}", repoPath, err)
-		return nil
-	}
-
+func AddRepoPinnedBranch(repoIdentifier, branch string) error {
 	repoPins := GetRepoPinnedBranches()
 
 	// Check if already exists
-	if branches, ok := repoPins[normalized]; ok {
+	if branches, ok := repoPins[repoIdentifier]; ok {
 		for _, b := range branches {
 			if b == branch {
-				log.Error("Branch \"{}\" already pinned for repo \"{}\".", branch, repoPath)
+				log.Print("Branch \"{}\" already pinned for repo \"{}\".", branch, repoIdentifier)
 				return nil
 			}
 		}
-		repoPins[normalized] = append(branches, branch)
+		repoPins[repoIdentifier] = append(branches, branch)
 	} else {
-		repoPins[normalized] = []string{branch}
+		repoPins[repoIdentifier] = []string{branch}
 	}
 
-	viper.Set(keyRepoPinnedBranches, repoPins)
-	err = saveConfig()
+	viper.Set(keyPinsBranchesRepositores, repoPins)
+	err := saveConfig()
 	if err != nil {
 		log.Error("Error saving config. Error: {}", err)
 		return nil
 	}
-	log.Print("Added pinned branch \"{}\" for repo \"{}\".", branch, repoPath)
+	log.Print("Added pinned branch \"{}\" for repo \"{}\".", branch, repoIdentifier)
 	return nil
 }
 
 // DeleteRepoPinnedBranch removes a pinned branch for a specific repository
-func DeleteRepoPinnedBranch(repoPath, branch string) error {
-	normalized, _ := path.Normalize(repoPath)
-
+func DeleteRepoPinnedBranch(repoIdentifier, branch string) error {
 	repoPins := GetRepoPinnedBranches()
 
-	branches, ok := repoPins[normalized]
+	branches, ok := repoPins[repoIdentifier]
 	if !ok {
-		log.Error("No pinned branches found for repo \"{}\".", repoPath)
+		log.Print("No pinned branches found for repo \"{}\".", repoIdentifier)
 		return nil
 	}
 
@@ -336,42 +369,31 @@ func DeleteRepoPinnedBranch(repoPath, branch string) error {
 	}
 
 	if !found {
-		log.Error("Branch \"{}\" not pinned for repo \"{}\".", branch, repoPath)
+		log.Print("Branch \"{}\" not pinned for repo \"{}\".", branch, repoIdentifier)
 		return nil
 	}
 
 	if len(newBranches) == 0 {
-		delete(repoPins, normalized)
+		delete(repoPins, repoIdentifier)
 	} else {
-		repoPins[normalized] = newBranches
+		repoPins[repoIdentifier] = newBranches
 	}
 
-	viper.Set(keyRepoPinnedBranches, repoPins)
+	viper.Set(keyPinsBranchesRepositores, repoPins)
 	err := saveConfig()
 	if err != nil {
 		log.Error("Error saving config. Error: {}", err)
 		return nil
 	}
-	log.Print("Deleted pinned branch \"{}\" for repo \"{}\".", branch, repoPath)
+	log.Print("Deleted pinned branch \"{}\" for repo \"{}\".", branch, repoIdentifier)
 	return nil
 }
 
-// IsBranchGloballyPinned checks if a branch is in the global pinned branches list
-func IsBranchGloballyPinned(branch string) bool {
-	for _, b := range GetPinnedBranches() {
-		if b == branch {
-			return true
-		}
-	}
-	return false
-}
-
 // IsBranchPinnedForRepo checks if a branch is pinned for a specific repo (not global)
-func IsBranchPinnedForRepo(repoPath, branch string) bool {
-	normalized, _ := path.Normalize(repoPath)
+func IsBranchPinnedForRepo(repoIdentifier, branch string) bool {
 	repoPins := GetRepoPinnedBranches()
 
-	if branches, ok := repoPins[normalized]; ok {
+	if branches, ok := repoPins[repoIdentifier]; ok {
 		for _, b := range branches {
 			if b == branch {
 				return true
@@ -380,6 +402,10 @@ func IsBranchPinnedForRepo(repoPath, branch string) bool {
 	}
 	return false
 }
+
+// =============================================================================
+// Aliases
+// =============================================================================
 
 // GetAliases returns the map of aliases
 func GetAliases() map[string]string {
@@ -405,7 +431,7 @@ func DeleteAlias(short string) error {
 	aliases := viper.GetStringMapString(keyAliases)
 
 	if _, exists := aliases[short]; !exists {
-		log.Error("Alias not found: \"{}\".", short)
+		log.Print("Alias not found: \"{}\".", short)
 		return nil
 	}
 
@@ -419,6 +445,10 @@ func DeleteAlias(short string) error {
 	log.Print("Deleted alias \"{}\".", short)
 	return nil
 }
+
+// =============================================================================
+// Config persistence
+// =============================================================================
 
 // saveConfig writes the current configuration to disk
 func saveConfig() error {

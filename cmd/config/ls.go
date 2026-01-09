@@ -97,7 +97,7 @@ func showPinnedRepos() {
 }
 
 func showPinnedBranches() {
-	branches := config.GetPinnedBranches()
+	branches := config.GetGlobalPinnedBranches()
 	log.Print("Pinned Branches (global):")
 	if len(branches) == 0 {
 		log.Print("  (none configured)")
