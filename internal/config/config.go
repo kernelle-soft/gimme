@@ -277,6 +277,59 @@ func IsBranchGloballyPinned(branch string) bool {
 	return false
 }
 
+// AddGlobalPinnedBranch adds a branch to the global protected branches list
+func AddGlobalPinnedBranch(branch string) error {
+	branches := GetGlobalPinnedBranches()
+
+	// Check if already exists
+	for _, b := range branches {
+		if b == branch {
+			log.Print("Branch \"{}\" is already protected.", branch)
+			return nil
+		}
+	}
+
+	branches = append(branches, branch)
+	viper.Set(keyPinsBranchesGlobal, branches)
+
+	if err := viper.WriteConfig(); err != nil {
+		return err
+	}
+
+	log.Print("Added protected branch \"{}\".", branch)
+	return nil
+}
+
+// DeleteGlobalPinnedBranch removes a branch from the global protected branches list
+func DeleteGlobalPinnedBranch(branch string) error {
+	branches := GetGlobalPinnedBranches()
+
+	// Find and remove
+	found := false
+	newBranches := make([]string, 0, len(branches))
+	for _, b := range branches {
+		if b == branch {
+			found = true
+		} else {
+			newBranches = append(newBranches, b)
+		}
+	}
+
+	if !found {
+		log.Print("Branch \"{}\" is not protected.", branch)
+		return nil
+	}
+
+	viper.Set(keyPinsBranchesGlobal, newBranches)
+
+	if err := viper.WriteConfig(); err != nil {
+		return err
+	}
+
+	log.Print("Removed protected branch \"{}\".", branch)
+	return nil
+}
+
 // =============================================================================
 // Pinned Branches - Per-Repo (pins.branches.repositories)
 // Uses repo identifier (e.g. "github.com/user/repo") as key

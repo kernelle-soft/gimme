@@ -9,7 +9,7 @@ import (
 var addCommand = &cobra.Command{
 	Use:   "add",
 	Short: "Add configuration values",
-	Long:  `Add configuration values such as search groups, pinned repositories, or aliases.`,
+	Long:  `Add configuration values such as search groups or aliases.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
@@ -25,16 +25,6 @@ var addGroupCommand = &cobra.Command{
 	},
 }
 
-var addPinnedRepoCommand = &cobra.Command{
-	Use:   "repo <path>",
-	Short: "Add a pinned repository",
-	Long:  `Pin a repository so it appears at the top of search results.`,
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		config.AddPinnedRepo(args[0])
-	},
-}
-
 var addAliasCommand = &cobra.Command{
 	Use:   "alias <short> <expanded>",
 	Short: "Add an alias",
@@ -47,8 +37,20 @@ var addAliasCommand = &cobra.Command{
 	},
 }
 
+var addProtectedCommand = &cobra.Command{
+	Use:   "protected <branch>",
+	Short: "Add a protected branch",
+	Long:  `Add a branch to the global protected branches list. Protected branches are preserved across all repositories.`,
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := config.AddGlobalPinnedBranch(args[0]); err != nil {
+			log.Error("Failed to add protected branch: {}", err)
+		}
+	},
+}
+
 func init() {
 	addCommand.AddCommand(addGroupCommand)
-	addCommand.AddCommand(addPinnedRepoCommand)
 	addCommand.AddCommand(addAliasCommand)
+	addCommand.AddCommand(addProtectedCommand)
 }

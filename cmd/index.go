@@ -28,6 +28,8 @@ var root = &cobra.Command{
 func init() {
 	root.AddCommand(jumpToRepoCommand)
 	root.AddCommand(listCommand)
+	root.AddCommand(pinCommand)
+	root.AddCommand(unpinCommand)
 	root.AddCommand(configcmd.Command)
 }
 

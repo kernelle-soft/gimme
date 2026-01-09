@@ -98,12 +98,12 @@ func showPinnedRepos() {
 
 func showPinnedBranches() {
 	branches := config.GetGlobalPinnedBranches()
-	log.Print("Pinned Branches (global):")
+	log.Print("Global Protected Branches:")
 	if len(branches) == 0 {
 		log.Print("  (none configured)")
 	} else {
 		for _, branch := range branches {
-			log.Print("  🛡️  {}", branch)
+			log.Print("  - {}", branch)
 		}
 	}
 
@@ -114,7 +114,7 @@ func showPinnedBranches() {
 		for repo, branches := range repoBranches {
 			log.Print("  {}:", repo)
 			for _, branch := range branches {
-				log.Print("    📌 {}", branch)
+				log.Print("    - {}", branch)
 			}
 		}
 	}
