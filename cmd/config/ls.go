@@ -24,13 +24,23 @@ var lsGroupCommand = &cobra.Command{
 	},
 }
 
-var lsPinCommand = &cobra.Command{
-	Use:     "pin",
-	Aliases: []string{"pins"},
+var lsPinnedRepoCommand = &cobra.Command{
+	Use:     "repo",
+	Aliases: []string{"repos"},
 	Short:   "List pinned repositories",
 	Long:    `List all pinned repositories.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		showPins()
+		showPinnedRepos()
+	},
+}
+
+var lsPinnedBranchCommand = &cobra.Command{
+	Use:     "branch",
+	Aliases: []string{"branches"},
+	Short:   "List pinned branches",
+	Long:    `List all pinned branches (global and per-repo).`,
+	Run: func(cmd *cobra.Command, args []string) {
+		showPinnedBranches()
 	},
 }
 
@@ -46,7 +56,8 @@ var lsAliasCommand = &cobra.Command{
 
 func init() {
 	lsCommand.AddCommand(lsGroupCommand)
-	lsCommand.AddCommand(lsPinCommand)
+	lsCommand.AddCommand(lsPinnedRepoCommand)
+	lsCommand.AddCommand(lsPinnedBranchCommand)
 	lsCommand.AddCommand(lsAliasCommand)
 }
 
@@ -54,7 +65,9 @@ var lsRun = func(cmd *cobra.Command, args []string) {
 	// Show all config
 	showGroups()
 	log.Print("")
-	showPins()
+	showPinnedRepos()
+	log.Print("")
+	showPinnedBranches()
 	log.Print("")
 	showAliases()
 }
@@ -71,15 +84,39 @@ func showGroups() {
 	}
 }
 
-func showPins() {
-	pins := config.GetPins()
+func showPinnedRepos() {
+	repos := config.GetPinnedRepos()
 	log.Print("Pinned Repositories:")
-	if len(pins) == 0 {
+	if len(repos) == 0 {
 		log.Print("  (none configured)")
 		return
 	}
-	for i, pin := range pins {
-		log.Print("  [{}] {}", i, pin)
+	for i, repo := range repos {
+		log.Print("  [{}] {}", i, repo)
+	}
+}
+
+func showPinnedBranches() {
+	branches := config.GetPinnedBranches()
+	log.Print("Pinned Branches (global):")
+	if len(branches) == 0 {
+		log.Print("  (none configured)")
+	} else {
+		for _, branch := range branches {
+			log.Print("  🛡️  {}", branch)
+		}
+	}
+
+	repoBranches := config.GetRepoPinnedBranches()
+	if len(repoBranches) > 0 {
+		log.Print("")
+		log.Print("Pinned Branches (per-repo):")
+		for repo, branches := range repoBranches {
+			log.Print("  {}:", repo)
+			for _, branch := range branches {
+				log.Print("    📌 {}", branch)
+			}
+		}
 	}
 }
 

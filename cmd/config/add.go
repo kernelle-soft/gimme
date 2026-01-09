@@ -25,13 +25,13 @@ var addGroupCommand = &cobra.Command{
 	},
 }
 
-var addPinCommand = &cobra.Command{
-	Use:   "pin <path>",
+var addPinnedRepoCommand = &cobra.Command{
+	Use:   "repo <path>",
 	Short: "Add a pinned repository",
 	Long:  `Pin a repository so it appears at the top of search results.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		config.AddPin(args[0])
+		config.AddPinnedRepo(args[0])
 	},
 }
 
@@ -49,6 +49,6 @@ var addAliasCommand = &cobra.Command{
 
 func init() {
 	addCommand.AddCommand(addGroupCommand)
-	addCommand.AddCommand(addPinCommand)
+	addCommand.AddCommand(addPinnedRepoCommand)
 	addCommand.AddCommand(addAliasCommand)
 }

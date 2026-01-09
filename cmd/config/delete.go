@@ -32,17 +32,17 @@ var deleteGroupCommand = &cobra.Command{
 	},
 }
 
-var deletePinCommand = &cobra.Command{
-	Use:   "pin <path|index>",
+var deletePinnedRepoCommand = &cobra.Command{
+	Use:   "repo <path|index>",
 	Short: "Delete a pinned repository",
 	Long:  `Remove a pinned repository by path or index.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check if it's an index
 		if idx, err := strconv.Atoi(args[0]); err == nil {
-			config.DeletePinByIndex(idx)
+			config.DeletePinnedRepoByIndex(idx)
 		} else {
-			config.DeletePin(args[0])
+			config.DeletePinnedRepo(args[0])
 		}
 	},
 }
@@ -59,6 +59,6 @@ var deleteAliasCommand = &cobra.Command{
 
 func init() {
 	deleteCommand.AddCommand(deleteGroupCommand)
-	deleteCommand.AddCommand(deletePinCommand)
+	deleteCommand.AddCommand(deletePinnedRepoCommand)
 	deleteCommand.AddCommand(deleteAliasCommand)
 }

@@ -63,7 +63,7 @@ func InFolders(searchFolders []string) RepoSearchOptions {
 
 func Repositories(opts RepoSearchOptions) []Repo {
 	found := []Repo{}
-	pins := config.GetPins()
+	pins := config.GetPinnedRepos()
 
 	for _, folder := range opts.SearchFolders {
 		found = append(found, findReposRecursively(folder, opts.Query, pins)...)
