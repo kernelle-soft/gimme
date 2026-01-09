@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/kernelle-soft/gimme/internal/config"
 	"github.com/kernelle-soft/gimme/internal/log"
+	"github.com/kernelle-soft/gimme/internal/repo"
 	"github.com/kernelle-soft/gimme/internal/search"
 	"github.com/spf13/cobra"
 )
@@ -31,10 +32,10 @@ var listReposRun = func(cmd *cobra.Command, args []string) {
 	allRepos := search.Repositories(search.ForRepo(query))
 
 	// Show pinned repos first as their own group
-	pinnedRepos := []search.Repo{}
-	for _, repo := range allRepos {
-		if repo.Pinned {
-			pinnedRepos = append(pinnedRepos, repo)
+	pinnedRepos := []repo.Repo{}
+	for _, r := range allRepos {
+		if r.Pinned {
+			pinnedRepos = append(pinnedRepos, r)
 		}
 	}
 
@@ -42,8 +43,8 @@ var listReposRun = func(cmd *cobra.Command, args []string) {
 		// Sort pinned repos by pin index
 		search.SortByPins(pinnedRepos)
 		log.Print("pinned repositories:")
-		for _, repo := range pinnedRepos {
-			log.Print("- {} ({})", repo.Name, repo.CurrentBranch())
+		for _, r := range pinnedRepos {
+			log.Print("- {} ({})", r.Name, r.CurrentBranch())
 		}
 		log.Print("") // Empty line for spacing
 	}
@@ -56,11 +57,11 @@ var listReposRun = func(cmd *cobra.Command, args []string) {
 			SearchFolders: []string{folder},
 		})
 
-		for _, repo := range repos {
-			if repo.Pinned {
-				log.Print("📌 {} ({})", repo.Name, repo.CurrentBranch())
+		for _, r := range repos {
+			if r.Pinned {
+				log.Print("📌 {} ({})", r.Name, r.CurrentBranch())
 			} else {
-				log.Print("-  {} ({})", repo.Name, repo.CurrentBranch())
+				log.Print("-  {} ({})", r.Name, r.CurrentBranch())
 			}
 		}
 	}

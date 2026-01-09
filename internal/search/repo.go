@@ -8,32 +8,10 @@ import (
 
 	"github.com/kernelle-soft/gimme/internal/config"
 	"github.com/kernelle-soft/gimme/internal/log"
+	"github.com/kernelle-soft/gimme/internal/repo"
 
 	"github.com/go-git/go-git/v5"
 )
-
-type Repo struct {
-	Repository *git.Repository
-	Path       string
-	Name       string
-	Pinned     bool
-	PinIndex   int // -1 if not pinned, otherwise the index in the pins list (lower = higher priority)
-}
-
-func (r *Repo) CurrentBranch() string {
-	head, err := r.Repository.Head()
-	if err != nil {
-		log.Error("Error getting current branch", "path", r.Path, "err", err)
-		return ""
-	}
-
-	// Head could be detached (pointing to a commit, not a branch)
-	if !head.Name().IsBranch() {
-		return head.Hash().String()[:7]
-	}
-
-	return head.Name().Short()
-}
 
 type RepoSearchOptions struct {
 	SearchFolders []string
@@ -61,8 +39,8 @@ func InFolders(searchFolders []string) RepoSearchOptions {
 	}
 }
 
-func Repositories(opts RepoSearchOptions) []Repo {
-	found := []Repo{}
+func Repositories(opts RepoSearchOptions) []repo.Repo {
+	found := []repo.Repo{}
 	pins := config.GetPinnedRepos()
 
 	for _, folder := range opts.SearchFolders {
@@ -70,7 +48,7 @@ func Repositories(opts RepoSearchOptions) []Repo {
 	}
 
 	// Sort alphabetically by name
-	slices.SortFunc(found, func(a, b Repo) int {
+	slices.SortFunc(found, func(a, b repo.Repo) int {
 		return strings.Compare(a.Name, b.Name)
 	})
 
@@ -79,8 +57,8 @@ func Repositories(opts RepoSearchOptions) []Repo {
 
 // SortByPins sorts repos with pinned repos first (by pin order), then alphabetically.
 // This is useful for commands like jump that want to prioritize pinned repos.
-func SortByPins(repos []Repo) {
-	slices.SortFunc(repos, func(a, b Repo) int {
+func SortByPins(repos []repo.Repo) {
+	slices.SortFunc(repos, func(a, b repo.Repo) int {
 		if a.Pinned && !b.Pinned {
 			return -1
 		}
@@ -96,8 +74,8 @@ func SortByPins(repos []Repo) {
 	})
 }
 
-func findReposRecursively(folder string, query string, pins []string) []Repo {
-	results := []Repo{}
+func findReposRecursively(folder string, query string, pins []string) []repo.Repo {
+	results := []repo.Repo{}
 
 	entries, err := os.ReadDir(folder)
 	if err != nil {
@@ -112,7 +90,7 @@ func findReposRecursively(folder string, query string, pins []string) []Repo {
 			continue
 		}
 
-		repo, err := git.PlainOpen(path)
+		gitRepo, err := git.PlainOpen(path)
 		if err != nil {
 			results = append(results, findReposRecursively(path, query, pins)...)
 			continue
@@ -120,13 +98,11 @@ func findReposRecursively(folder string, query string, pins []string) []Repo {
 
 		if strings.Contains(entry.Name(), query) {
 			pinIndex := slices.Index(pins, path)
-			results = append(results, Repo{
-				Repository: repo,
-				Path:       path,
-				Name:       entry.Name(),
-				Pinned:     pinIndex >= 0,
-				PinIndex:   pinIndex,
-			})
+			if pinIndex >= 0 {
+				results = append(results, repo.NewPinnedRepo(gitRepo, path, entry.Name(), pinIndex))
+			} else {
+				results = append(results, repo.NewRepo(gitRepo, path, entry.Name()))
+			}
 		}
 	}
 
