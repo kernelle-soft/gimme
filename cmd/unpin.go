@@ -5,6 +5,7 @@ import (
 
 	"github.com/kernelle-soft/gimme/internal/config"
 	"github.com/kernelle-soft/gimme/internal/log"
+	"github.com/kernelle-soft/gimme/internal/search"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +14,7 @@ var unpinBranchFlag bool
 var unpinCommand = &cobra.Command{
 	Use:   "unpin [repo|branch]",
 	Short: "Unpin a repository or branch",
-	Long: `Unpin a repository or branch.
+	Long: `Unpin a repository or branch. This will deprioritize the repository in searching and jumping, and will remove protection on the branch.
 
 Without -b flag: unpins a repository.
   gimme unpin           - unpin current directory's repo
@@ -65,7 +66,7 @@ func unpinBranch(args []string) {
 		return
 	}
 
-	currentRepo := findRepoForPath(cwd)
+	currentRepo := search.FindRepoForPath(cwd)
 	if currentRepo == nil {
 		log.Print("Not in a git repository.")
 		return

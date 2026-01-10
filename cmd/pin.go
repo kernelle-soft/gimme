@@ -5,6 +5,8 @@ import (
 
 	"github.com/kernelle-soft/gimme/internal/config"
 	"github.com/kernelle-soft/gimme/internal/log"
+	"github.com/kernelle-soft/gimme/internal/search"
+	"github.com/kernelle-soft/gimme/internal/slice"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +15,7 @@ var pinBranchFlag bool
 var pinCommand = &cobra.Command{
 	Use:   "pin [repo|branch]",
 	Short: "Pin a repository or branch",
-	Long: `Pin a repository or branch.
+	Long: `Pin a repository or branch. This will prioritize the repository in searching and jumping, and will protect the branch from being deleted by gimme.
 
 Without -b flag: pins a repository so it appears at the top of search results.
   gimme pin           - pin current directory's repo
@@ -63,7 +65,7 @@ func pinBranch(args []string) {
 		return
 	}
 
-	currentRepo := findRepoForPath(cwd)
+	currentRepo := search.FindRepoForPath(cwd)
 	if currentRepo == nil {
 		log.Print("Not in a git repository.")
 		return
@@ -79,7 +81,7 @@ func pinBranch(args []string) {
 
 	// Check if branch exists
 	branches := currentRepo.ListBranches()
-	if !isInSlice(branchName, branches) {
+	if !slice.Contains(branches, branchName) {
 		log.Print("Branch \"{}\" not found.", branchName)
 		return
 	}

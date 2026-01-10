@@ -108,3 +108,14 @@ func findReposRecursively(folder string, query string, pins []string) []repo.Rep
 
 	return results
 }
+
+// FindRepoForPath finds the repository that contains the given path
+func FindRepoForPath(path string) *repo.Repo {
+	repos := Repositories(DefaultRepoSearchOptions())
+	for _, r := range repos {
+		if strings.HasPrefix(path, r.Path) {
+			return &r
+		}
+	}
+	return nil
+}

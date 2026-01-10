@@ -8,6 +8,7 @@ import (
 	"github.com/kernelle-soft/gimme/internal/log"
 	"github.com/kernelle-soft/gimme/internal/repo"
 	"github.com/kernelle-soft/gimme/internal/search"
+	"github.com/kernelle-soft/gimme/internal/slice"
 	"github.com/spf13/cobra"
 )
 
@@ -98,7 +99,7 @@ func listBranches() {
 	}
 
 	// Find the repo for the current directory
-	currentRepo := findRepoForPath(cwd)
+	currentRepo := search.FindRepoForPath(cwd)
 	if currentRepo == nil {
 		log.Print("Not in a git repository.")
 		return
@@ -132,15 +133,15 @@ func listBranches() {
 
 		// Pin status in square brackets
 		pinStatus := ""
-		if isInSlice(branch, globalPins) {
+		if slice.Contains(globalPins, branch) {
 			pinStatus = " [protected]"
-		} else if isInSlice(branch, repoPinnedBranches) {
+		} else if slice.Contains(repoPinnedBranches, branch) {
 			pinStatus = " [pinned]"
 		}
 
 		// Other status indicators in parentheses
 		statusIndicators := []string{}
-		if isMerged && !isInSlice(branch, globalPins) {
+		if isMerged && !slice.Contains(globalPins, branch) {
 			statusIndicators = append(statusIndicators, "merged")
 		}
 
@@ -161,23 +162,3 @@ func listBranches() {
 	}
 }
 
-// findRepoForPath walks up from the given path to find a git repository
-func findRepoForPath(path string) *repo.Repo {
-	repos := search.Repositories(search.DefaultRepoSearchOptions())
-	for _, r := range repos {
-		if strings.HasPrefix(path, r.Path) {
-			return &r
-		}
-	}
-	return nil
-}
-
-// isInSlice checks if a string is in a slice
-func isInSlice(s string, slice []string) bool {
-	for _, item := range slice {
-		if item == s {
-			return true
-		}
-	}
-	return false
-}
