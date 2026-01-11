@@ -161,4 +161,3 @@ func listBranches() {
 		log.Print("{}{}{}{}", prefix, branch, statusPart, pinStatus)
 	}
 }
-
