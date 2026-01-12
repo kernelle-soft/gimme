@@ -12,7 +12,6 @@ import (
 
 var (
 	cleanBranchFlag  bool
-	cleanMergedFlag  bool
 	cleanAllFlag     bool
 	cleanDryRunFlag  bool
 	cleanForceFlag   bool
@@ -27,9 +26,9 @@ var cleanCommand = &cobra.Command{
 Requires -b flag for branch cleaning (future: may support other clean operations).
 
 With -b flag: bulk delete branches with protection awareness.
-  gimme clean -b --merged     - delete merged branches
-  gimme clean -b --all        - delete all non-pinned branches
-  gimme clean -b --dry-run    - preview without deleting
+  gimme clean -b            - delete merged branches (default)
+  gimme clean -b --all      - delete all non-pinned branches
+  gimme clean -b --dry-run  - preview without deleting
 
 Protection hierarchy (branches that won't be deleted):
   1. Current branch — always protected
@@ -41,8 +40,7 @@ Protection hierarchy (branches that won't be deleted):
 
 func init() {
 	cleanCommand.Flags().BoolVarP(&cleanBranchFlag, "branch", "b", false, "Clean branches (required)")
-	cleanCommand.Flags().BoolVar(&cleanMergedFlag, "merged", false, "Delete merged branches")
-	cleanCommand.Flags().BoolVar(&cleanAllFlag, "all", false, "Delete all non-pinned branches")
+	cleanCommand.Flags().BoolVar(&cleanAllFlag, "all", false, "Delete all non-pinned branches (default: merged only)")
 	cleanCommand.Flags().BoolVar(&cleanDryRunFlag, "dry-run", false, "Preview without deleting")
 	cleanCommand.Flags().BoolVar(&cleanForceFlag, "force", false, "Include per-repo pinned branches")
 	cleanCommand.Flags().BoolVarP(&cleanVerboseFlag, "verbose", "v", false, "Show each deleted branch")
@@ -51,14 +49,7 @@ func init() {
 var cleanRun = func(cmd *cobra.Command, args []string) {
 	if !cleanBranchFlag {
 		log.Print("Please specify -b flag to clean branches.")
-		log.Print("Usage: gimme clean -b [--merged|--all] [--dry-run] [--force] [-v]")
-		return
-	}
-
-	if !cleanMergedFlag && !cleanAllFlag {
-		log.Print("Please specify --merged or --all.")
-		log.Print("  --merged  Delete branches merged into protected branches")
-		log.Print("  --all     Delete all non-protected branches")
+		log.Print("Usage: gimme clean -b [--all] [--dry-run] [--force] [-v]")
 		return
 	}
 
@@ -115,8 +106,8 @@ func cleanBranches() {
 			continue
 		}
 
-		// Apply filter: --merged or --all
-		if cleanMergedFlag {
+		// Apply filter: default is merged-only, --all skips this check
+		if !cleanAllFlag {
 			// Only delete if merged into any global pin
 			if !currentRepo.IsMerged(branch, globalPins) {
 				continue
