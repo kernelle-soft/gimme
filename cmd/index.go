@@ -30,6 +30,7 @@ func init() {
 	root.AddCommand(listCommand)
 	root.AddCommand(pinCommand)
 	root.AddCommand(unpinCommand)
+	root.AddCommand(cleanCommand)
 	root.AddCommand(configcmd.Command)
 }
 

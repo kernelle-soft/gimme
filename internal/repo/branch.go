@@ -88,3 +88,11 @@ func (r *Repo) ListBranches() []string {
 	}
 	return lines
 }
+
+// DeleteBranch deletes a local branch.
+// Uses -D (force delete) to handle both merged and unmerged branches.
+func (r *Repo) DeleteBranch(branch string) error {
+	cmd := exec.Command("git", "branch", "-D", branch)
+	cmd.Dir = r.Path
+	return cmd.Run()
+}
