@@ -153,12 +153,12 @@ func cleanBranches() {
 
 	// Output summary
 	switch deletedCount {
-		case 0:
-			log.Print("No branches deleted.")
-		case 1:
-			log.Print("Deleted 1 branch.")
-		default:
-			log.Print("Deleted {} branches.", deletedCount)
+	case 0:
+		log.Print("No branches deleted.")
+	case 1:
+		log.Print("Deleted 1 branch.")
+	default:
+		log.Print("Deleted {} branches.", deletedCount)
 	}
 
 	// Show skipped worktrees if any
